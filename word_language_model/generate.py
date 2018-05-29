@@ -23,6 +23,8 @@ parser.add_argument('--outf', type=str, default='generated.txt',
                     help='output file for generated text')
 parser.add_argument('--words', type=int, default='1000',
                     help='number of words to generate')
+parser.add_argument('--prefix', type=str, default='The quick brown fox jumped over the',
+                    help='the beginning of the string you want to generate')
 parser.add_argument('--seed', type=int, default=1111,
                     help='random seed')
 parser.add_argument('--cuda', action='store_true',
@@ -31,6 +33,7 @@ parser.add_argument('--temperature', type=float, default=1.0,
                     help='temperature - higher will increase diversity')
 parser.add_argument('--log-interval', type=int, default=100,
                     help='reporting interval')
+
 args = parser.parse_args()
 
 # Set the random seed manually for reproducibility.
@@ -51,23 +54,26 @@ model.eval()
 corpus = data.Corpus(args.data)
 ntokens = len(corpus.dictionary)
 hidden = model.init_hidden(1)
-input = torch.randint(ntokens, (1, 1), dtype=torch.long).to(device)
-
+inputs = args.prefix.split(' ')
+curr_input = inputs[0]
 with open(args.outf, 'w') as outf:
     with torch.no_grad():  # no tracking history
         for i in range(args.words):
-            output, hidden = model(input, hidden)
-            word_weights = output.squeeze().div(args.temperature).exp().cpu()
+            output, hidden = model(curr_input, hidden)
 
-            word_idx = torch.multinomial(word_weights, 1)[0]
-            input.fill_(word_idx)
-            word = corpus.dictionary.idx2word[word_idx]
-
-            if i > 5:
+            if i < len(inputs) - 1:
+                curr_input.fill_(corpus.dictionary.word2idx[inputs[i+1]])
+                print(inputs[i+1])
+            else:
+                word_weights = output.squeeze().div(args.temperature).exp().cpu()
                 values, indices = torch.topk(word_weights, 5)
                 for place, word_idx in enumerate(indices):
-                    print('candidate #{}: {} with a score of {}.'.format(place+1, corpus.dictionary.idx2word[word_idx], values[place]))
-            print(word + ('\n' if i % 20 == 19 else ' '))
+                    print('candidate #{}: \"{}\" with a score of {}.'.format(place+1, corpus.dictionary.idx2word[word_idx], values[place]))
+                    print(corpus.glove[corpus.dictionary.idx2word[word_idx]])
+                curr_input.fill_(word_idx)
+                word_idx = torch.multinomial(word_weights, 1)[0]
+                word = corpus.dictionary.idx2word[word_idx]
+                print(word)
             # outf.write(word + ('\n' if i % 20 == 19 else ' '))
 
             if i % args.log_interval == 0:

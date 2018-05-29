@@ -1,5 +1,8 @@
 import os
 import torch
+import torchtext
+
+from collections import Counter
 
 class Dictionary(object):
     def __init__(self):
@@ -18,10 +21,14 @@ class Dictionary(object):
 
 class Corpus(object):
     def __init__(self, path):
+        self.counter = Counter()
         self.dictionary = Dictionary()
         self.train = self.tokenize(os.path.join(path, 'train.txt'))
         self.valid = self.tokenize(os.path.join(path, 'valid.txt'))
         self.test = self.tokenize(os.path.join(path, 'test.txt'))
+        self.vocab = torchtext.vocab(self.counter)
+        self.glove = self.vocab.GloVe(name='wiki-100d', dim=100)
+        print(self.glove['the'])
 
     def tokenize(self, path):
         """Tokenizes a text file."""
@@ -33,6 +40,7 @@ class Corpus(object):
                 words = line.split() + ['<eos>']
                 tokens += len(words)
                 for word in words:
+                    self.counter[word] += 1
                     self.dictionary.add_word(word)
 
         # Tokenize file content

@@ -26,9 +26,7 @@ class Corpus(object):
         self.train = self.tokenize(os.path.join(path, 'train.txt'))
         self.valid = self.tokenize(os.path.join(path, 'valid.txt'))
         self.test = self.tokenize(os.path.join(path, 'test.txt'))
-        self.vocab = torchtext.vocab(self.counter)
-        self.glove = self.vocab.GloVe(name='wiki-100d', dim=100)
-        print(self.glove['the'])
+        self.glove = self.vocab.GloVe(name='6B', dim=100)
 
     def tokenize(self, path):
         """Tokenizes a text file."""

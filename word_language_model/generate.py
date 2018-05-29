@@ -55,15 +55,15 @@ corpus = data.Corpus(args.data)
 ntokens = len(corpus.dictionary)
 hidden = model.init_hidden(1)
 inputs = args.prefix.split(' ')
-curr_input = inputs[0]
+curr_input = torch.zeros([1, 1], dtype=torch.long).to(device)
 with open(args.outf, 'w') as outf:
     with torch.no_grad():  # no tracking history
         for i in range(args.words):
-            output, hidden = model(curr_input, hidden)
-
             if i < len(inputs) - 1:
-                curr_input.fill_(corpus.dictionary.word2idx[inputs[i+1]])
-                print(inputs[i+1])
+                curr_input.fill_(corpus.dictionary.word2idx[inputs[i]])
+                print(inputs[i])
+
+            output, hidden = model(curr_input, hidden)
             else:
                 word_weights = output.squeeze().div(args.temperature).exp().cpu()
                 values, indices = torch.topk(word_weights, 5)

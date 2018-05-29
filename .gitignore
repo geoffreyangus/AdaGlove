@@ -2,3 +2,4 @@
 data/
 *.pyc
 .vector_cache
+.pt

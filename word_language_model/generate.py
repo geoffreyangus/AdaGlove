@@ -58,11 +58,16 @@ with open(args.outf, 'w') as outf:
         for i in range(args.words):
             output, hidden = model(input, hidden)
             word_weights = output.squeeze().div(args.temperature).exp().cpu()
+
             word_idx = torch.multinomial(word_weights, 1)[0]
             input.fill_(word_idx)
             word = corpus.dictionary.idx2word[word_idx]
 
             print(word + ('\n' if i % 20 == 19 else ' '))
+            if i > 5:
+                values, indices = torch.topk(word_weights, 5)
+                for place, word_idx in enumerate(indices):
+                    print('candidate #{}: {} with a probability score of {}.'.format(place+1, values[place], corpus.dictionary.idx2word[word_idx]))
             # outf.write(word + ('\n' if i % 20 == 19 else ' '))
 
             if i % args.log_interval == 0:

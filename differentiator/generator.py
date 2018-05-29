@@ -8,7 +8,7 @@ class textGenerator(object):
     def __init__(
         self, 
         data_path='../data/wikitext-2', 
-        checkpoint='../word_language_model/model.pt',
+        checkpoint='../model/model.pt',
         temperature=1.0,
         seed=224):
 

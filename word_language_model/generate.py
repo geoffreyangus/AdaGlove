@@ -64,7 +64,8 @@ with open(args.outf, 'w') as outf:
                 print(inputs[i])
 
             output, hidden = model(curr_input, hidden)
-            else:
+
+            if i >= len(inputs) - 1:
                 word_weights = output.squeeze().div(args.temperature).exp().cpu()
                 values, indices = torch.topk(word_weights, 5)
                 for place, word_idx in enumerate(indices):
@@ -74,6 +75,7 @@ with open(args.outf, 'w') as outf:
                 word_idx = torch.multinomial(word_weights, 1)[0]
                 word = corpus.dictionary.idx2word[word_idx]
                 print(word)
+                
             # outf.write(word + ('\n' if i % 20 == 19 else ' '))
 
             if i % args.log_interval == 0:

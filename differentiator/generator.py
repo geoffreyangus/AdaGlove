@@ -23,7 +23,7 @@ class textGenerator(object):
         self.corpus = data.Corpus(data_path)
 
         with open(checkpoint, 'rb') as f:
-            self.model = torch.load(f).to(device)
+            self.model = torch.load(f).to(self.device)
         self.model.eval()
         hidden = self.model.init_hidden(1)
 

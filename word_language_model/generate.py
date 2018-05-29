@@ -63,11 +63,11 @@ with open(args.outf, 'w') as outf:
             input.fill_(word_idx)
             word = corpus.dictionary.idx2word[word_idx]
 
-            print(word + ('\n' if i % 20 == 19 else ' '))
             if i > 5:
                 values, indices = torch.topk(word_weights, 5)
                 for place, word_idx in enumerate(indices):
-                    print('candidate #{}: {} with a probability score of {}.'.format(place+1, values[place], corpus.dictionary.idx2word[word_idx]))
+                    print('candidate #{}: {} with a score of {}.'.format(place+1, corpus.dictionary.idx2word[word_idx], values[place]))
+            print(word + ('\n' if i % 20 == 19 else ' '))
             # outf.write(word + ('\n' if i % 20 == 19 else ' '))
 
             if i % args.log_interval == 0:

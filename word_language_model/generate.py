@@ -46,7 +46,7 @@ if args.temperature < 1e-3:
 
 with open(args.checkpoint, 'rb') as f:
     model = torch.load(f).to(device)
-model.eval()
+model.eval()    
 
 corpus = data.Corpus(args.data)
 ntokens = len(corpus.dictionary)

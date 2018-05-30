@@ -39,7 +39,7 @@ class GloVeGenerator(object):
         is_homonym = True
         for old_centroid in self.centroid_dict[target]:
             # If it can be subsumed by another centroid's sphere of influence
-            if np.linalg.norm(old_centroid, new_centroid) < self.threshold:
+            if np.linalg.norm(old_centroid - new_centroid) < self.threshold:
                 is_homonym = False
 
         # TODO: Update logic for determining homonymy

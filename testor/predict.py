@@ -19,5 +19,10 @@ y = [int(float(ex.avg_rating) > 5) for ex in harness.dataset]
 # rate to evaluate on our scws task
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.80, random_state=42)
 
-for a in zip(X_train, y_train):
-    print(a)
+# TODO: Get glove vectors of X_train & X_test
+# These glove vectors should be the differences between the two words
+#X_train = glove(X_train)
+#X_test = glove(X_test)
+
+regression = LogisticRegression()
+regression.fit(X_train, y_test)

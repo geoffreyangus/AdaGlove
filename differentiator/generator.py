@@ -13,7 +13,7 @@ class GloVeGenerator(object):
         data_path='../data/wikitext-2', 
         regex_rules=r"(= +.*= +)", 
         threshold=200, 
-        glove_dim=100
+        glove_dim=50
     ):
         self.data_path = data_path
         self.regex_rules = regex_rules
@@ -38,15 +38,19 @@ class GloVeGenerator(object):
         reader.preprocess_text(glove_corpus_path, rules={'remove': ['<unk>']})
         # Cannot do this call from within a different folder than demo because of path dependencies
         subprocess.call([join(target_path, 'demo.sh'), 'python', glove_corpus_path, target_path, vector_file, str(self.glove_dim)])
-        self.glove = {}
+        glove_dict = {}
         with open(join(target_path, vector_file + '.txt'), 'r') as f:
-            line = f.getline().split(' ')
-            word = line[0]
-            glove_arr = np.array([float(el) for el in line[1:]])
-            self.glove[word] = glove_arr
+            line = f.readline()
+            while line:
+                line_list = line.split(' ')
+                word = line_list[0]
+                glove_arr = np.array([float(el) for el in line_list[1:]])
+                glove_dict[word] = glove_arr
+                line = f.readline()
+        return glove_dict
 
     def update_centroid_dict(self, target, context):
-        if target == '<unk>':
+        if target == '<unk>' or target == '<eos>':
             return target
 
         candidates = self.predictor.predict_candidates(context, 10)

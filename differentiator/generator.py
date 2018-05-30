@@ -58,10 +58,10 @@ class GloVeGenerator(object):
         new_centroid = np.zeros(self.glove_dim)
         for candidate in candidates:
             rank, word, score = candidate
-            if word == '<eos>':
+            if word not in self.glove.keys():
                 continue
                 
-            print('Candidate #{}: \"{}\" with score {}.'.format(rank, word, score))
+            # print('Candidate #{}: \"{}\" with score {}.'.format(rank, word, score))
             new_centroid += self.glove[word]            
 
         new_centroid /= len(candidates)
@@ -95,7 +95,8 @@ class GloVeGenerator(object):
                     # target word modified to reflect centroid assignment
                     outword = self.update_centroid_dict(target, context)
                     f.write(outword + ' ')
-
+                    if i % 100 == 0:
+                        print('Processed {} words...'.format(i))
                 sentence = reader.get_next_sentence()
 
         self.init_glove(outfile, 'new_vectors')

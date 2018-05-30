@@ -59,7 +59,7 @@ class Predictor(object):
                     scores, indices = torch.topk(word_weights, num_candidates)
                     candidates = []
                     for place, word_idx in enumerate(indices):
-                        candidate_word = self.corpus.dictionary.idx2word[word_idx].lower()
+                        candidate_word = self.corpus.dictionary.idx2word[word_idx]
                         candidate = (place+1, candidate_word, scores[place])
                         candidates.append(candidate)
                     return candidates

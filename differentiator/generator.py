@@ -1,50 +1,67 @@
-import torch
-import torchtext
+from predictor import Predictor
+from collections import defaultdict
+from os.path import join
 import data
+import torchtext
+from reader import TextReader
+import numpy as np
 
-
-class textGenerator(object):
-
+class GloVeGenerator(object):
     def __init__(
         self, 
         data_path='../data/wikitext-2', 
-        checkpoint='../checkpoints/model.pt',
-        temperature=1.0,
-        seed=224):
-
-        assert temperature > 1e-3, \
-            'temperature has to be greater than or equal to 1e-3'
-
-        self.temperature = temperature
-
-        # Set the random seed manually for reproducibility.
-        torch.manual_seed(seed)
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+        regex_rules=r"(= +.*= +)", 
+        threshold=200, 
+        glove_dim=100
+    ):
         self.data_path = data_path
+        self.regex_rules = regex_rules
+        self.threshold = threshold
+        self.glove_dim = glove_dim
+
         self.corpus = data.Corpus(data_path)
-        with open(checkpoint, 'rb') as f:
-            self.model = torch.load(f).to(self.device)
-        self.model.eval()
+        self.glove = torchtext.vocab.GloVe(name='6B', dim=glove_dim)
+        self.centroid_dict = defaultdict(list)
+        self.predictor = Predictor(self.corpus)
 
-    def getCandidates(self, inputString, numCandidates):
-        inputs = inputString.split(' ')
-        curr_input = torch.zeros([1, 1], dtype=torch.long).to(self.device)
-        hidden  = self.model.init_hidden(1)
-        with torch.no_grad():  # no tracking history
-            for i in range(len(inputs) + 1):
-                if i < len(inputs):
-                    curr_input.fill_(self.corpus.dictionary.word2idx[inputs[i]])
-                    print(inputs[i])
+    def update_centroid_dict(self, target, context):
+        candidates = self.predictor.predict_candidates(context, 10)
 
-                output, hidden = self.model(curr_input, hidden)
+        for candidate in candidates:
+            rank, word, score = candidate
+            print('Candidate #{}: \"{}\" with score {}.'.format(rank, word, score))
 
-                if i == len(inputs):
-                    word_weights = output.squeeze().div(self.temperature).exp().cpu()
-                    scores, indices = torch.topk(word_weights, numCandidates)
-                    candidates = []
-                    for place, word_idx in enumerate(indices):
-                        candidate_word = self.corpus.dictionary.idx2word[word_idx].lower()
-                        candidate = (place+1, candidate_word, scores[place], self.corpus.glove[candidate_word])
-                        candidates.append(candidate)
-                    return candidates
+        new_centroid = np.zeros(self.glove_dim)
+        for candidate in candidates:
+            new_centroid += self.glove[word]
+
+        new_centroid /= len(candidates)
+        is_homonym = True
+        for old_centroid in self.centroid_dict[target]:
+            # If it can be subsumed by another centroid's sphere of influence
+            if np.linalg.norm(old_centroid - new_centroid) < self.threshold:
+                is_homonym = False
+
+        # TODO: Update logic for determining homonymy
+        if is_homonym:
+            self.centroid_dict[target].append(new_centroid)
+
+    def train(self):
+        reader = TextReader(join(self.data_path, 'train.txt'), regex_rules=r"(= +.*= +)")
+        sentence = reader.get_next_sentence()
+        while sentence:
+            # returns sentence as list
+            for i, word in enumerate(sentence):
+                if word == '.':
+                    break
+                target = word
+                context = sentence[:i]
+                self.update_centroid_dict(target, context)
+
+            sentence = reader.get_next_sentence()
+
+        print(self.centroid_dict[target])
+
+if __name__ == '__main__':
+    generator = GloVeGenerator()
+    generator.train()

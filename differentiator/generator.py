@@ -96,8 +96,8 @@ class GloVeGenerator(object):
                     # target word modified to reflect centroid assignment
                     outword = self.update_centroid_dict(target, context)
                     f.write(outword + ' ')
-                    num_iters += 1
-
+                
+                num_iters += 1
                 if num_iters % 100 == 0:
                     print('Processed {} sentences...'.format(num_iters))
                 sentence = reader.get_next_sentence()

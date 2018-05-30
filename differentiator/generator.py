@@ -106,5 +106,5 @@ class GloVeGenerator(object):
         self.init_glove(outfile, 'new_vectors')
 
 if __name__ == '__main__':
-    generator = GloVeGenerator('valid.txt')
-    generator.train('out_valid.txt')
+    generator = GloVeGenerator('train.txt')
+    generator.train('out_train.txt')

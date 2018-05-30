@@ -90,6 +90,7 @@ class GloVeGenerator(object):
                 # returns sentence as list
                 for i, word in enumerate(sentence):
                     if word == '.':
+                        f.write('. ')
                         break
                     target = word
                     context = sentence[:i]

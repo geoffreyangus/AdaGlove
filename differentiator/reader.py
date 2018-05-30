@@ -42,8 +42,9 @@ class TextReader(object):
         for word in self.read_word():
             sentence.append(word)
             if word == '.':
-                return self.clean_sentence(sentence)
-        return None
+                print(' '.join(sentence))
+                yield self.clean_sentence(sentence)
+        yield None
 
     def clean_sentence(self, sentence_arr):
         sentence = ' '.join(sentence_arr)

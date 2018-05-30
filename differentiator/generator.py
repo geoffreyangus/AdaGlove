@@ -31,7 +31,7 @@ class GloVeGenerator(object):
         # Find parent directory agnostic of current location
         offset = target_path.find('AdaGlove') + len('AdaGlove')
         target_path = target_path[:offset] + '/GloVe/'
-        ext_loc = self.data_path.rfind('.')
+        ext_loc = text_file.rfind('.')
         glove_corpus_name = text_file[ext_loc:] + '_no_unk' + text_file[:ext_loc]
         glove_corpus_path = join(self.data_path, glove_corpus_name)
         reader = TextReader(join(self.data_path, text_file), regex_rules=None)
@@ -82,11 +82,10 @@ class GloVeGenerator(object):
 
     def train(self, outfile):
         reader = TextReader(join(self.data_path, 'train.txt'), regex_rules=r"(= +.*= +)")
-        sentence = reader.get_next_sentence()
 
         num_iters = 0
         with open(join(self.data_path, outfile), 'w') as f:
-            while sentence:
+            for sentence in reader.get_next_sentence():
                 # returns sentence as list
                 for i, word in enumerate(sentence):
                     if word == '.':
@@ -101,7 +100,6 @@ class GloVeGenerator(object):
                 num_iters += 1
                 if num_iters % 100 == 0:
                     print('Processed {} sentences...'.format(num_iters))
-                sentence = reader.get_next_sentence()
 
         self.init_glove(outfile, 'new_vectors')
 

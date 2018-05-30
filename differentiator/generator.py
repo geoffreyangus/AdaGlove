@@ -4,6 +4,8 @@ from os.path import join
 import data
 import torchtext
 from reader import TextReader
+import numpy as np
+
 class GloVeGenerator(object):
     def __init__(
         self, 
@@ -23,13 +25,13 @@ class GloVeGenerator(object):
         self.predictor = Predictor(self.corpus)
 
     def update_centroid_dict(self, target, context):
-        candidates = self.predictor.getCandidates(context, 10)
+        candidates = self.predictor.predict_candidates(context, 10)
 
         for candidate in candidates:
             rank, word, score = candidate
             print('Candidate #{}: \"{}\" with score {}.'.format(rank, word, score))
 
-        new_centroid = np.zeros(glove_dim)
+        new_centroid = np.zeros(self.glove_dim)
         for candidate in candidates:
             new_centroid += self.glove[word]
 
@@ -42,10 +44,10 @@ class GloVeGenerator(object):
 
         # TODO: Update logic for determining homonymy
         if is_homonym:
-            centroid_dict[target].append(new_centroid)
+            self.centroid_dict[target].append(new_centroid)
 
     def train(self):
-        reader = textReader(join(self.data_path, 'train'), regex_rules=r"(= +.*= +)")
+        reader = TextReader(join(self.data_path, 'train.txt'), regex_rules=r"(= +.*= +)")
         sentence = reader.get_next_sentence()
         while sentence:
             # returns sentence as list

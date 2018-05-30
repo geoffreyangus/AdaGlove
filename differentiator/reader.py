@@ -1,10 +1,10 @@
 import re
 
 
-class textReader(object):
+class TextReader(object):
 
-	def __init__(self, text_path, regex_rules):
-		self.text_path = text_path
+        def __init__(self, text_path, regex_rules):
+        	self.text_path = text_path
 		self.file = open(text_path, "r")
 		self.regex_rules = regex_rules
 

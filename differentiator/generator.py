@@ -1,7 +1,9 @@
 from predictor import Predictor
 from collections import defaultdict
 from os.path import join
-
+import data
+import torchtext
+from reader import TextReader
 class GloVeGenerator(object):
 	def __init__(
 		self, 
@@ -18,7 +20,7 @@ class GloVeGenerator(object):
 		self.corpus = data.Corpus(data_path)
 		self.glove = torchtext.vocab.GloVe(name='6B', dim=glove_dim)
 		self.centroid_dict = defaultdict(list)
-		self.predictor = Predictor(corpus)
+		self.predictor = Predictor(self.corpus)
 
 	def update_centroid_dict(self, target, context):
 		candidates = self.predictor.getCandidates(context, 10)

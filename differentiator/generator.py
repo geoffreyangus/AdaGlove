@@ -10,6 +10,7 @@ import subprocess
 class GloVeGenerator(object):
     def __init__(
         self, 
+        train_file,
         data_path='../data/wikitext-2', 
         regex_rules=r"(= +.*= +)", 
         threshold=200, 
@@ -22,9 +23,10 @@ class GloVeGenerator(object):
 
         self.corpus = data.Corpus(data_path)
         self.glove_dim = glove_dim
-        self.glove = self.init_glove('train.txt', 'vectors')
+        self.glove = self.init_glove(train_file, 'vectors')
         self.centroid_dict = defaultdict(list)
         self.predictor = Predictor(self.corpus)
+        self.train_file = train_file
 
     def init_glove(self, text_file, vector_file):
         target_path = dirname(realpath(__file__))
@@ -81,7 +83,7 @@ class GloVeGenerator(object):
         return target
 
     def train(self, outfile):
-        reader = TextReader(join(self.data_path, 'train.txt'), regex_rules=r"(= +.*= +)")
+        reader = TextReader(join(self.data_path, self.train_file), regex_rules=r"(= +.*= +)")
 
         num_iters = 0
         with open(join(self.data_path, outfile), 'w') as f:
@@ -104,5 +106,5 @@ class GloVeGenerator(object):
         self.init_glove(outfile, 'new_vectors')
 
 if __name__ == '__main__':
-    generator = GloVeGenerator()
-    generator.train('new_train.txt')
+    generator = GloVeGenerator('valid.txt')
+    generator.train('out_valid.txt')

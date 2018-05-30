@@ -50,7 +50,7 @@ class TextReader(object):
 
             sentence = buf.split()
             yield self.clean_sentence(sentence)
-        yield None
+        yield []
 
     def clean_sentence(self, sentence_arr):
         sentence = ' '.join(sentence_arr)

@@ -3,3 +3,5 @@ data/
 *.pyc
 .vector_cache
 *.pt
+GloVe/*.bin
+GloVe/*.txt

@@ -27,6 +27,15 @@ class TextReader(object):
                 yield word
         yield '' #handle the scene that the file is empty
 
+    # Expand this as necessary.
+    def preprocess_text(self, outfile, rules):
+        with open(outfile, 'w') as f:
+            if 'remove' in rules:
+                for word in self.read_word():
+                    if word in rules['remove']:
+                        continue
+                    f.write(word + ' ')
+        self.file.seek(0)
 
     def get_next_sentence(self):
         sentence = []
@@ -35,7 +44,6 @@ class TextReader(object):
             if word == '.':
                 return self.clean_sentence(sentence)
         return None
-
 
     def clean_sentence(self, sentence_arr):
         sentence = ' '.join(sentence_arr)

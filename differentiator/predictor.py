@@ -50,8 +50,7 @@ class Predictor(object):
                     if inputs[i] in self.corpus.dictionary.word2idx:
                         curr_input.fill_(self.corpus.dictionary.word2idx[inputs[i]])
                     else:
-                        curr_input.fill_(self.corpus.dictionary.word2idx['<unk'])
-                    print(inputs[i])
+                        curr_input.fill_(self.corpus.dictionary.word2idx['<unk>'])
 
                 output, hidden = self.model(curr_input, hidden)
 

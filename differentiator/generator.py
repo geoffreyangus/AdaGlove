@@ -34,7 +34,7 @@ class GloVeGenerator(object):
         offset = target_path.find('AdaGlove') + len('AdaGlove')
         target_path = target_path[:offset] + '/GloVe/'
         ext_loc = text_file.rfind('.')
-        glove_corpus_name = text_file[ext_loc:] + '_no_unk' + text_file[:ext_loc]
+        glove_corpus_name = text_file[:ext_loc] + '_no_unk' + text_file[ext_loc:]
         glove_corpus_path = join(self.data_path, glove_corpus_name)
         reader = TextReader(join(self.data_path, text_file), regex_rules=None)
         reader.preprocess_text(glove_corpus_path, rules={'remove': ['<unk>']})

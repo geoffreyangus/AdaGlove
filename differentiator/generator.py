@@ -37,7 +37,7 @@ class GloVeGenerator(object):
         reader = TextReader(join(self.data_path, text_path), regex_rules=None)
         reader.preprocess_text(glove_corpus_path, rules={'remove': ['<unk>']})
         # Cannot do this call from within a different folder than demo because of path dependencies
-        subprocess.call(['../GloVe/demo.sh', 'python', glove_corpus_path, target_path, vector_path, self.glove_dim])
+        subprocess.call(['../GloVe/demo.sh', 'python', glove_corpus_path, target_path, vector_path, str(self.glove_dim)])
 
     def update_centroid_dict(self, target, context):
         candidates = self.predictor.predict_candidates(context, 10)
@@ -70,7 +70,7 @@ class GloVeGenerator(object):
         reader = TextReader(join(self.data_path, 'train.txt'), regex_rules=r"(= +.*= +)")
         sentence = reader.get_next_sentence()
 
-        with open(join(self.data_path, outfile)) as f:
+        with open(join(self.data_path, outfile), 'w') as f:
             while sentence:
                 # returns sentence as list
                 for i, word in enumerate(sentence):
@@ -88,4 +88,4 @@ class GloVeGenerator(object):
 
 if __name__ == '__main__':
     generator = GloVeGenerator()
-    generator.train()
+    generator.train('new_train.txt')

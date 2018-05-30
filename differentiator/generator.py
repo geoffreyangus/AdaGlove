@@ -84,6 +84,7 @@ class GloVeGenerator(object):
         reader = TextReader(join(self.data_path, 'train.txt'), regex_rules=r"(= +.*= +)")
         sentence = reader.get_next_sentence()
 
+        num_iters = 0
         with open(join(self.data_path, outfile), 'w') as f:
             while sentence:
                 # returns sentence as list
@@ -95,8 +96,10 @@ class GloVeGenerator(object):
                     # target word modified to reflect centroid assignment
                     outword = self.update_centroid_dict(target, context)
                     f.write(outword + ' ')
-                    if i % 100 == 0:
-                        print('Processed {} words...'.format(i))
+                    num_iters += 1
+
+                if num_iters % 100 == 0:
+                    print('Processed {} sentences...'.format(num_iters))
                 sentence = reader.get_next_sentence()
 
         self.init_glove(outfile, 'new_vectors')

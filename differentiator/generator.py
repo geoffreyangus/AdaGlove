@@ -26,20 +26,29 @@ class GloVeGenerator(object):
         self.centroid_dict = defaultdict(list)
         self.predictor = Predictor(self.corpus)
 
-    def init_glove(self, text_path, vector_path):
+    def init_glove(self, text_file, vector_file):
         target_path = dirname(realpath(__file__))
         # Find parent directory agnostic of current location
         offset = target_path.find('AdaGlove') + len('AdaGlove')
         target_path = target_path[:offset] + '/GloVe/'
         ext_loc = self.data_path.rfind('.')
-        glove_corpus_name = text_path[ext_loc:] + '_no_unk' + text_path[:ext_loc]
+        glove_corpus_name = text_file[ext_loc:] + '_no_unk' + text_file[:ext_loc]
         glove_corpus_path = join(self.data_path, glove_corpus_name)
-        reader = TextReader(join(self.data_path, text_path), regex_rules=None)
+        reader = TextReader(join(self.data_path, text_file), regex_rules=None)
         reader.preprocess_text(glove_corpus_path, rules={'remove': ['<unk>']})
         # Cannot do this call from within a different folder than demo because of path dependencies
-        subprocess.call(['../GloVe/demo.sh', 'python', glove_corpus_path, target_path, vector_path, str(self.glove_dim)])
+        subprocess.call([join(target_path, 'demo.sh'), 'python', glove_corpus_path, target_path, vector_file, str(self.glove_dim)])
+        self.glove = {}
+        with open(join(target_path, vector_file + '.txt'), 'r') as f:
+            line = f.getline().split(' ')
+            word = line[0]
+            glove_arr = np.array([float(el) for el in line[1:]])
+            self.glove[word] = glove_arr
 
     def update_centroid_dict(self, target, context):
+        if target == '<unk>':
+            return target
+
         candidates = self.predictor.predict_candidates(context, 10)
 
         for candidate in candidates:

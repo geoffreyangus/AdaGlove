@@ -50,18 +50,19 @@ class GloVeGenerator(object):
         return glove_dict
 
     def update_centroid_dict(self, target, context):
-        if target == '<unk>' or target == '<eos>':
+        if target == '<unk>':
             return target
 
         candidates = self.predictor.predict_candidates(context, 10)
 
-        for candidate in candidates:
-            rank, word, score = candidate
-            print('Candidate #{}: \"{}\" with score {}.'.format(rank, word, score))
-
         new_centroid = np.zeros(self.glove_dim)
         for candidate in candidates:
-            new_centroid += self.glove[word]
+            rank, word, score = candidate
+            if word == '<eos>':
+                continue
+                
+            print('Candidate #{}: \"{}\" with score {}.'.format(rank, word, score))
+            new_centroid += self.glove[word]            
 
         new_centroid /= len(candidates)
         old_centroids = self.centroid_dict[target]

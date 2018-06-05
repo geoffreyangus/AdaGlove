@@ -8,6 +8,7 @@ import numpy as np
 import subprocess
 import multiprocessing 
 import argparse
+import re
 
 parser = argparse.ArgumentParser(description='CS224U Final Project.')
 parser.add_argument('--in_dir', required=True, help='the dataset from which to pull text')
@@ -131,10 +132,12 @@ class GloVeGenerator(object):
         homonym_pattern = self.generate_regex_pattern(word)
         glove_dict = self.read_glove(self.vector_file)
 
-        candidates = self.predictor.predict_candidates(left_context, 10)
+        candidates = self.predictor.predict_candidates(context, 10)
         candidate_pattern = self.generate_regex_pattern([candidate[1] for candidate in candidates])
         # TODO: retrain language model on the new dataset. For now we are averaging all centroids.
         candidates = np.array([vec for key, vec in glove_dict.items() if re.search(candidate_pattern, key)])
+        print(candidates.shape)
+        print(candidates)
         candidate_centroid = np.average(candidates, axis=1)
 
         homonyms = np.array([vec for key, vec in glove_dict.items() if re.search(homonym_pattern, key)])

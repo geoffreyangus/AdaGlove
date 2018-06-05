@@ -55,6 +55,37 @@ class GloVeGenerator(object):
         subprocess.call([join(self.glove_path, 'demo.sh'), 'python', glove_corpus_path, self.glove_path, vector_file, str(self.glove_dim)])
         return self.read_glove(vector_file)
 
+    def update_centroid_dict(self, target, context):
+        if target == '<unk>':
+            return target
+
+        candidates = self.predictor.predict_candidates(context, 10)
+
+        new_centroid = np.zeros(self.glove_dim)
+        for candidate in candidates:
+            rank, word, score = candidate
+            if word not in self.glove_dict.keys():
+                continue
+                
+            # print('Candidate #{}: \"{}\" with score {}.'.format(rank, word, score))
+            new_centroid += self.glove_dict[word]            
+
+        new_centroid /= len(candidates)
+        old_centroids = self.centroid_dict[target]
+        is_homonym = True
+        for i, old_centroid in enumerate(old_centroids):
+            # If another centroid exists close in meaning, assign this word to the same meaning.
+            if np.linalg.norm(old_centroid - new_centroid) < self.threshold:
+                is_homonym = False
+                target += str(i)
+
+        # TODO: Update logic for determining homonymy
+        if is_homonym:
+            target += str(len(old_centroids))
+            old_centroids.append(new_centroid)
+
+        return target
+
     def fit(self, in_file, out_file):
         print('Fitting to {}...'.format(join(self.data_path, in_file)))
         print('Initializing GloVe vectors...')
@@ -66,7 +97,7 @@ class GloVeGenerator(object):
             with open(join(self.data_path, out_file), 'w') as f:
                 for sentence in reader.get_next_sentence():
                     contexts = [sentence[:i] for i in range(len(sentence))]
-                    examples = list(zip(sentence, contexts))
+                    examples = zip(sentence, contexts)
                     print(examples)
                     # target word modified to reflect centroid assignment
                     outwords = pool.starmap(self.update_centroid_dict, examples)

@@ -20,7 +20,7 @@ class GloVeGenerator(object):
         self.regex_rules = regex_rules
         self.threshold = threshold
         self.glove_dim = glove_dim
-
+        print('Initializing dataset corpus...')
         self.corpus = data.Corpus(data_path)
         self.glove_dim = glove_dim
         self.centroid_dict = defaultdict(list)
@@ -88,7 +88,7 @@ class GloVeGenerator(object):
     def fit(self, in_file, out_file):
         print('Fitting to {}...'.format(join(self.data_path, in_file)))
         print('Initializing GloVe vectors...')
-        glove_dict = self.init_glove(train_file, 'vectors')
+        glove_dict = self.init_glove(in_file, 'vectors')
         reader = TextReader(join(self.data_path, in_file), regex_rules=r"(= +.*= +)")
 
         num_iters = 0

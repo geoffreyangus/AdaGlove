@@ -10,6 +10,8 @@ import multiprocessing
 import argparse
 import re
 
+STOP_WORDS = [',', '.', '*', '\\', '(', ')', '|', '<unk>', '[', ']']
+
 parser = argparse.ArgumentParser(description='CS224U Final Project.')
 parser.add_argument('--in_dir', required=True, help='the dataset from which to pull text')
 
@@ -119,11 +121,12 @@ class GloVeGenerator(object):
             return r"{}[0-9]+".format(word_list[0])
 
         pattern = r'('
-        for word in word_list[:-1]:
-            if word not in [',', '.', '*', '\\', '(', ')', '|', '<unk>']:
-                pattern += word + '|'
+        pattern += word_list[0] if word_list[0] not in STOP_WORDS else "<unk>"
+        for word in word_list[1:]:
+            if word not in STOP_WORDS:
+                pattern += '|' + word
 
-        pattern += (word_list[-1] if word_list[-1] not in [',', '.', '*', '\\', '(', ')', '|', '<unk>'] else '')  + ')' + '[0-9]+'
+        pattern += ')' + '[0-9]+'
         return pattern
 
     def set_glove_file(self, vector_file):

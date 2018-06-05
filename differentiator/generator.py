@@ -8,6 +8,9 @@ import numpy as np
 import subprocess
 import multiprocessing 
 
+parser = argparse.ArgumentParser(description='CS224U Final Project.')
+parser.add_argument('--in_dir', required=True, help='the dataset from which to pull text')
+
 class GloVeGenerator(object):
     def __init__(
         self, 
@@ -137,5 +140,8 @@ class GloVeGenerator(object):
         return result
 
 if __name__ == '__main__':
+    args = parser.parse_args()
+    in_dir = args.in_dir
+    out_dir = 'out_' + in_dir
     generator = GloVeGenerator()
-    generator.fit('train.txt', 'out_train.txt')
+    generator.fit(in_dir, out_dir)

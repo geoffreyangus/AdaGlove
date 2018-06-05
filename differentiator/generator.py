@@ -115,7 +115,7 @@ class GloVeGenerator(object):
         self.init_glove(out_file, 'new_vectors')
 
     def generate_regex_pattern(self, word_list):
-        if len(word_list):
+        if len(word_list) == 1:
             return r"{}[0-9]+".format(word_list[0])
 
         pattern = r'('
@@ -128,12 +128,14 @@ class GloVeGenerator(object):
     def set_glove_file(self, vector_file):
         self.vector_file = vector_file
 
-    def find_nearest_semantic_neighbor(self, context, word):
+    def find_nearest_semantic_neighbor(self, word, context):
         homonym_pattern = self.generate_regex_pattern(word)
         glove_dict = self.read_glove(self.vector_file)
 
         candidates = self.predictor.predict_candidates(context, 10)
         candidate_pattern = self.generate_regex_pattern([candidate[1] for candidate in candidates])
+        print(candidates)
+        print(candidate_pattern)
         # TODO: retrain language model on the new dataset. For now we are averaging all centroids.
         candidates = np.array([vec for key, vec in glove_dict.items() if re.search(candidate_pattern, key)])
         print(candidates.shape)
@@ -153,7 +155,9 @@ class GloVeGenerator(object):
             print('word1...', word1)
             print('word2...', word2)
             if word1 not in self.corpus.dictionary.word2idx.keys() or word2 not in self.corpus.dictionary.word2idx.keys():
-                results.append((np.zeros(glove_dim), np.zeros(glove_dim)))
+                results.append((np.zeros(self.glove_dim), np.zeros(self.glove_dim)))
+                print(word1, 'or', word2, 'not in corpus. Skipping...')
+                continue
             result1 = self.find_nearest_semantic_neighbor(word1, context1)
             result2 = self.find_nearest_semantic_neighbor(word2, context2)
             results.append((result1, result2))

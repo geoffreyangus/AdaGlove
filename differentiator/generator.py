@@ -120,7 +120,8 @@ class GloVeGenerator(object):
 
         pattern = r'('
         for word in word_list[:-1]:
-            pattern += word + '|'
+            if word not in [',', '.', '*', '\\', '(', ')', '|', '<unk>']:
+                pattern += word + '|'
 
         pattern += word_list[-1] + ')' + '[0-9]+'
         return pattern

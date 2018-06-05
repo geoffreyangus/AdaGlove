@@ -25,7 +25,7 @@ class Predictor(object):
         self.data_path = data_path
         self.corpus = corpus
         with open(checkpoint, 'rb') as f:
-            self.model = torch.load(f).to(self.device)
+            self.model = torch.load(f).to(device)
         self.model.eval()
 
     def predict_candidates(self, inputs, num_candidates):

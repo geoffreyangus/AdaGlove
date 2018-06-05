@@ -55,7 +55,8 @@ class GloVeGenerator(object):
         subprocess.call([join(self.glove_path, 'demo.sh'), 'python', glove_corpus_path, self.glove_path, vector_file, str(self.glove_dim)])
         return self.read_glove(vector_file)
 
-    def update_centroid_dict(self, target, context):
+    def update_centroid_dict(self, example):
+        target, context = example
         if target == '<unk>':
             return target
 
@@ -93,20 +94,18 @@ class GloVeGenerator(object):
         reader = TextReader(join(self.data_path, in_file), regex_rules=r"(= +.*= +)")
 
         num_iters = 0
-        with multiprocessing.Pool(processes=3) as pool:
-            with open(join(self.data_path, out_file), 'w') as f:
-                for sentence in reader.get_next_sentence():
-                    contexts = [sentence[:i] for i in range(len(sentence))]
-                    examples = zip(sentence, contexts)
-                    print(examples)
-                    # target word modified to reflect centroid assignment
-                    outwords = pool.starmap(self.update_centroid_dict, examples)
-                    for outword in outwords:
-                        f.write(outword + ' ')
-                    
-                    num_iters += 1
-                    if num_iters % 100 == 0:
-                        print('Processed {} sentences...'.format(num_iters))
+        with open(join(self.data_path, out_file), 'w') as f:
+            for sentence in reader.get_next_sentence():
+                contexts = [sentence[:i] for i in range(len(sentence))]
+                examples = list(zip(sentence, contexts))
+                # target word modified to reflect centroid assignment
+                outwords = list(map(self.update_centroid_dict, examples))
+                for outword in outwords:
+                    f.write(outword + ' ')
+                
+                num_iters += 1
+                if num_iters % 100 == 0:
+                    print('Processed {} sentences...'.format(num_iters))
 
         self.init_glove(out_file, 'new_vectors')
 

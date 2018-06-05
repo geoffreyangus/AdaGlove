@@ -54,7 +54,7 @@ class GloVeGenerator(object):
         subprocess.call([join(self.glove_path, 'demo.sh'), 'python', glove_corpus_path, self.glove_path, vector_file, str(self.glove_dim)])
         return self.read_glove(vector_file)
 
-    def update_centroid_dict(self, glove_dict, target, context):
+    def update_centroid_dict(self, target, context):
         if target == '<unk>':
             return target
 
@@ -63,11 +63,11 @@ class GloVeGenerator(object):
         new_centroid = np.zeros(self.glove_dim)
         for candidate in candidates:
             rank, word, score = candidate
-            if word not in glove_dict.keys():
+            if word not in self.glove_dict.keys():
                 continue
                 
             # print('Candidate #{}: \"{}\" with score {}.'.format(rank, word, score))
-            new_centroid += glove_dict[word]            
+            new_centroid += self.glove_dict[word]            
 
         new_centroid /= len(candidates)
         old_centroids = self.centroid_dict[target]
@@ -88,24 +88,20 @@ class GloVeGenerator(object):
     def fit(self, in_file, out_file):
         print('Fitting to {}...'.format(join(self.data_path, in_file)))
         print('Initializing GloVe vectors...')
-        glove_dict = self.init_glove(in_file, 'vectors')
+        self.glove_dict = self.init_glove(in_file, 'vectors')
         reader = TextReader(join(self.data_path, in_file), regex_rules=r"(= +.*= +)")
 
         num_iters = 0
         with multiprocessing.Pool(processes=3) as pool:
             with open(join(self.data_path, out_file), 'w') as f:
                 for sentence in reader.get_next_sentence():
-                    # returns sentence as list
-                    for i, word in enumerate(sentence):
-                        if word == '.':
-                            f.write('. ')
-                            break
-                        target = word
-                        context = sentence[:i]
-                        # target word modified to reflect centroid assignment
-                        outwords = pool.starmap(self.update_centroid_dict, (glove_dict, target, context))
-                        for outword in outwords:
-                            f.write(outword + ' ')
+                    contexts = [sentence[:i] for i in range(len(sentence))]
+                    examples = zip(sentence, contexts)
+                    print(examples)
+                    # target word modified to reflect centroid assignment
+                    outwords = pool.starmap(self.update_centroid_dict, examples)
+                    for outword in outwords:
+                        f.write(outword + ' ')
                     
                     num_iters += 1
                     if num_iters % 100 == 0:

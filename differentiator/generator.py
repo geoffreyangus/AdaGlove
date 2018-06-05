@@ -112,7 +112,7 @@ class GloVeGenerator(object):
 
         self.init_glove(out_file, 'new_vectors')
 
-    def generate_regex_pattern(word_list):
+    def generate_regex_pattern(self, word_list):
         if len(word_list):
             return r"{}[0-9]+".format(word_list[0])
 
@@ -123,9 +123,12 @@ class GloVeGenerator(object):
         pattern += word_list[-1] + ')' + '[0-9]+'
         return pattern
 
-    def predict(vector_file, left_context, word):
+    def set_glove_file(self, vector_file):
+        self.vector_file = vector_file
+
+    def find_nearest_semantic_neighbor(self, context, word):
         homonym_pattern = self.generate_regex_pattern(word)
-        glove_dict = self.read_glove(vector_file)
+        glove_dict = self.read_glove(self.vector_file)
 
         candidates = self.predictor.predict_candidates(left_context, 10)
         candidate_pattern = self.generate_regex_pattern([candidate[1] for candidate in candidates])
@@ -138,6 +141,16 @@ class GloVeGenerator(object):
         result_idx = np.argmin(np.linalg.norm(homonyms - candidate_centroid))
         result = homonyms[result_idx]
         return result
+
+    def predict(self, X):
+        results = []
+        for x in X:
+            word1, context1, word2, context2 = x
+            result1 = self.find_nearest_semantic_neighbor(word1, context1)
+            result2 = self.find_nearest_semantic_neighbor(word2, context2)
+            results.append((result1, result2))
+            
+        return results
 
 if __name__ == '__main__':
     args = parser.parse_args()

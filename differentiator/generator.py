@@ -7,6 +7,7 @@ from reader import TextReader
 import numpy as np
 import subprocess
 import multiprocessing 
+import argparse
 
 parser = argparse.ArgumentParser(description='CS224U Final Project.')
 parser.add_argument('--in_dir', required=True, help='the dataset from which to pull text')
@@ -149,7 +150,7 @@ class GloVeGenerator(object):
             result1 = self.find_nearest_semantic_neighbor(word1, context1)
             result2 = self.find_nearest_semantic_neighbor(word2, context2)
             results.append((result1, result2))
-            
+
         return results
 
 if __name__ == '__main__':

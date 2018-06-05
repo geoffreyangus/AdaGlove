@@ -123,7 +123,7 @@ class GloVeGenerator(object):
             if word not in [',', '.', '*', '\\', '(', ')', '|', '<unk>']:
                 pattern += word + '|'
 
-        pattern += word_list[-1] + ')' + '[0-9]+'
+        pattern += (word_list[-1] if word_list[-1] not in [',', '.', '*', '\\', '(', ')', '|', '<unk>'] else '')  + ')' + '[0-9]+'
         return pattern
 
     def set_glove_file(self, vector_file):
@@ -141,7 +141,7 @@ class GloVeGenerator(object):
         candidates = np.array([vec for key, vec in glove_dict.items() if re.search(candidate_pattern, key)])
         print(candidates.shape)
         print(candidates)
-        candidate_centroid = np.average(candidates, axis=1)
+        candidate_centroid = np.average(candidates, axis=0)
 
         homonyms = np.array([vec for key, vec in glove_dict.items() if re.search(homonym_pattern, key)])
         # Broadcast candidate_centroid to get a difference matrix, then calculate length

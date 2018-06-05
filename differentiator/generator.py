@@ -10,12 +10,12 @@ import subprocess
 class GloVeGenerator(object):
     def __init__(
         self, 
-        train_file,
         data_path='../data/wikitext-2', 
         regex_rules=r"(= +.*= +)", 
         threshold=200, 
         glove_dim=50
     ):
+        print('Initializing GloVeGenerator...')
         self.data_path = data_path
         self.regex_rules = regex_rules
         self.threshold = threshold
@@ -23,25 +23,18 @@ class GloVeGenerator(object):
 
         self.corpus = data.Corpus(data_path)
         self.glove_dim = glove_dim
-        self.glove = self.init_glove(train_file, 'vectors')
         self.centroid_dict = defaultdict(list)
+        print('Initializing language model...')
         self.predictor = Predictor(self.corpus)
-        self.train_file = train_file
 
-    def init_glove(self, text_file, vector_file):
         target_path = dirname(realpath(__file__))
         # Find parent directory agnostic of current location
         offset = target_path.find('AdaGlove') + len('AdaGlove')
-        target_path = target_path[:offset] + '/GloVe/'
-        ext_loc = text_file.rfind('.')
-        glove_corpus_name = text_file[:ext_loc] + '_no_unk' + text_file[ext_loc:]
-        glove_corpus_path = join(self.data_path, glove_corpus_name)
-        reader = TextReader(join(self.data_path, text_file), regex_rules=None)
-        reader.preprocess_text(glove_corpus_path, rules={'remove': ['<unk>']})
-        # Cannot do this call from within a different folder than demo because of path dependencies
-        subprocess.call([join(target_path, 'demo.sh'), 'python', glove_corpus_path, target_path, vector_file, str(self.glove_dim)])
+        self.glove_path = target_path[:offset] + '/GloVe/'
+
+    def read_glove(self, vector_file):
         glove_dict = {}
-        with open(join(target_path, vector_file + '.txt'), 'r') as f:
+        with open(join(self.glove_path, vector_file + '.txt'), 'r') as f:
             line = f.readline()
             while line:
                 line_list = line.split(' ')
@@ -51,7 +44,17 @@ class GloVeGenerator(object):
                 line = f.readline()
         return glove_dict
 
-    def update_centroid_dict(self, target, context):
+    def init_glove(self, text_file, vector_file):
+        ext_loc = text_file.rfind('.')
+        glove_corpus_name = text_file[:ext_loc] + '_no_unk' + text_file[ext_loc:]
+        glove_corpus_path = join(self.data_path, glove_corpus_name)
+        reader = TextReader(join(self.data_path, text_file), regex_rules=None)
+        reader.preprocess_text(glove_corpus_path, rules={'remove': ['<unk>']})
+        # Cannot do this call from within a different folder than demo because of path dependencies
+        subprocess.call([join(target_path, 'demo.sh'), 'python', glove_corpus_path, self.glove_path, vector_file, str(self.glove_dim)])
+        return read_glove(target_path, vector_file)
+
+    def update_centroid_dict(self, glove_dict, target, context):
         if target == '<unk>':
             return target
 
@@ -60,11 +63,11 @@ class GloVeGenerator(object):
         new_centroid = np.zeros(self.glove_dim)
         for candidate in candidates:
             rank, word, score = candidate
-            if word not in self.glove.keys():
+            if word not in glove_dict.keys():
                 continue
                 
             # print('Candidate #{}: \"{}\" with score {}.'.format(rank, word, score))
-            new_centroid += self.glove[word]            
+            new_centroid += glove[word]            
 
         new_centroid /= len(candidates)
         old_centroids = self.centroid_dict[target]
@@ -82,11 +85,14 @@ class GloVeGenerator(object):
 
         return target
 
-    def train(self, outfile):
-        reader = TextReader(join(self.data_path, self.train_file), regex_rules=r"(= +.*= +)")
+    def fit(self, in_file, out_file):
+        print('Fitting to {}...'.format(join(self.data_path, in_file)))
+        print('Initializing GloVe vectors...')
+        glove_dict = self.init_glove(train_file, 'vectors')
+        reader = TextReader(join(self.data_path, in_file), regex_rules=r"(= +.*= +)")
 
         num_iters = 0
-        with open(join(self.data_path, outfile), 'w') as f:
+        with open(join(self.data_path, out_file), 'w') as f:
             for sentence in reader.get_next_sentence():
                 # returns sentence as list
                 for i, word in enumerate(sentence):
@@ -96,15 +102,42 @@ class GloVeGenerator(object):
                     target = word
                     context = sentence[:i]
                     # target word modified to reflect centroid assignment
-                    outword = self.update_centroid_dict(target, context)
+                    outword = self.update_centroid_dict(glove_dict, target, context)
                     f.write(outword + ' ')
                 
                 num_iters += 1
                 if num_iters % 100 == 0:
                     print('Processed {} sentences...'.format(num_iters))
 
-        self.init_glove(outfile, 'new_vectors')
+        self.init_glove(out_file, 'new_vectors')
+
+    def generate_regex_pattern(word_list):
+        if len(word_list):
+            return r"{}[0-9]+".format(word_list[0])
+
+        pattern = r'('
+        for word in word_list[:-1]:
+            pattern += word + '|'
+
+        pattern += word_list[-1] + ')' + '[0-9]+'
+        return pattern
+
+    def predict(vector_file, left_context, word):
+        homonym_pattern = self.generate_regex_pattern(word)
+        glove_dict = self.read_glove(vector_file)
+
+        candidates = self.predictor.predict_candidates(left_context, 10)
+        candidate_pattern = self.generate_regex_pattern([candidate[1] for candidate in candidates])
+        # TODO: retrain language model on the new dataset. For now we are averaging all centroids.
+        candidates = np.array([vec for key, vec in glove_dict.items() if re.search(candidate_pattern, key)])
+        candidate_centroid = np.average(candidates, axis=1)
+
+        homonyms = np.array([vec for key, vec in glove_dict.items() if re.search(homonym_pattern, key)])
+        # Broadcast candidate_centroid to get a difference matrix, then calculate length
+        result_idx = np.argmin(np.linalg.norm(homonyms - candidate_centroid))
+        result = homonyms[result_idx]
+        return result
 
 if __name__ == '__main__':
-    generator = GloVeGenerator('train.txt')
-    generator.train('out_train.txt')
+    generator = GloVeGenerator()
+    generator.fit('train.txt', 'out_train.txt')

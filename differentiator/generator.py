@@ -39,7 +39,7 @@ class GloVeGenerator(object):
 
     def read_glove(self, vector_file):
         glove_dict = {}
-        with open(join(self.glove_path, vector_file + '.txt'), 'r') as f:
+        with open(join(self.glove_path, vector_file), 'r') as f:
             line = f.readline()
             while line:
                 line_list = line.split(' ')
@@ -94,7 +94,7 @@ class GloVeGenerator(object):
     def fit(self, in_file, out_file):
         print('Fitting to {}...'.format(join(self.data_path, in_file)))
         print('Initializing GloVe vectors...')
-        self.glove_dict = self.init_glove(in_file, 'vectors')
+        self.glove_dict = self.init_glove(in_file, 'vectors.txt')
         reader = TextReader(join(self.data_path, in_file), regex_rules=r"(= +.*= +)")
 
         num_iters = 0

@@ -20,7 +20,7 @@ class Predictor(object):
 
         # Set the random seed manually for reproducibility.
         torch.manual_seed(seed)
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.data_path = data_path
         self.corpus = corpus
@@ -42,7 +42,8 @@ class Predictor(object):
                 2.) the word itself
                 3.) unnormalized score from language model
         """
-        curr_input = torch.zeros([1, 1], dtype=torch.long).to(self.device)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        curr_input = torch.zeros([1, 1], dtype=torch.long).to(device)
         hidden  = self.model.init_hidden(1)
         with torch.no_grad():  # no tracking history
             for i in range(len(inputs) + 1):

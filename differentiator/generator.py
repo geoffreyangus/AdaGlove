@@ -51,8 +51,8 @@ class GloVeGenerator(object):
         reader = TextReader(join(self.data_path, text_file), regex_rules=None)
         reader.preprocess_text(glove_corpus_path, rules={'remove': ['<unk>']})
         # Cannot do this call from within a different folder than demo because of path dependencies
-        subprocess.call([join(target_path, 'demo.sh'), 'python', glove_corpus_path, self.glove_path, vector_file, str(self.glove_dim)])
-        return read_glove(target_path, vector_file)
+        subprocess.call([join(self.glove_path, 'demo.sh'), 'python', glove_corpus_path, self.glove_path, vector_file, str(self.glove_dim)])
+        return self.read_glove(vector_file)
 
     def update_centroid_dict(self, glove_dict, target, context):
         if target == '<unk>':
@@ -67,7 +67,7 @@ class GloVeGenerator(object):
                 continue
                 
             # print('Candidate #{}: \"{}\" with score {}.'.format(rank, word, score))
-            new_centroid += glove[word]            
+            new_centroid += glove_dict[word]            
 
         new_centroid /= len(candidates)
         old_centroids = self.centroid_dict[target]

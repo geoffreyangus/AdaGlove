@@ -150,6 +150,10 @@ class GloVeGenerator(object):
         results = []
         for x in X:
             word1, context1, word2, context2 = x
+            print('word1...', word1)
+            print('word2...', word2)
+            if word1 not in self.corpus.dictionary.word2idx.keys() or word2 not in self.corpus.dictionary.word2idx.keys():
+                results.append((np.zeros(glove_dim), np.zeros(glove_dim)))
             result1 = self.find_nearest_semantic_neighbor(word1, context1)
             result2 = self.find_nearest_semantic_neighbor(word2, context2)
             results.append((result1, result2))

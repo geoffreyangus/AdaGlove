@@ -92,22 +92,24 @@ class GloVeGenerator(object):
         reader = TextReader(join(self.data_path, in_file), regex_rules=r"(= +.*= +)")
 
         num_iters = 0
-        with open(join(self.data_path, out_file), 'w') as f:
-            for sentence in reader.get_next_sentence():
-                # returns sentence as list
-                for i, word in enumerate(sentence):
-                    if word == '.':
-                        f.write('. ')
-                        break
-                    target = word
-                    context = sentence[:i]
-                    # target word modified to reflect centroid assignment
-                    outword = self.update_centroid_dict(glove_dict, target, context)
-                    f.write(outword + ' ')
-                
-                num_iters += 1
-                if num_iters % 100 == 0:
-                    print('Processed {} sentences...'.format(num_iters))
+        with multiprocessing.Pool(processes=3) as pool:
+            with open(join(self.data_path, out_file), 'w') as f:
+                for sentence in reader.get_next_sentence():
+                    # returns sentence as list
+                    for i, word in enumerate(sentence):
+                        if word == '.':
+                            f.write('. ')
+                            break
+                        target = word
+                        context = sentence[:i]
+                        # target word modified to reflect centroid assignment
+                        outwords = pool.starmap(self.update_centroid_dict, (glove_dict, target, context))
+                        for outword in outwords:
+                            f.write(outword + ' ')
+                    
+                    num_iters += 1
+                    if num_iters % 100 == 0:
+                        print('Processed {} sentences...'.format(num_iters))
 
         self.init_glove(out_file, 'new_vectors')
 

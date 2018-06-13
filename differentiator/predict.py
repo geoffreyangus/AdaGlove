@@ -31,7 +31,7 @@ X_test = model.predict(X_test)
 train_idxs = []
 num_removed_train = 0
 for i, val in enumerate(X_train):
-    if val[0] != None and val[1] != None:
+    if type(val[0]) == np.ndarray:
         train_idxs.append(i)
     else:
         num_removed_train += 1
@@ -39,7 +39,7 @@ for i, val in enumerate(X_train):
 test_idxs = []
 num_removed_test = 0
 for i, val in enumerate(X_test):
-    if val[0] != None and val[1] != None:
+    if type(val[0]) == np.ndarray:
         test_idxs.append(i)
     else:
         num_removed_test += 1

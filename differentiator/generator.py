@@ -155,7 +155,7 @@ class GloVeGenerator(object):
             print('word1...', word1)
             print('word2...', word2)
             if word1 not in self.corpus.dictionary.word2idx.keys() or word2 not in self.corpus.dictionary.word2idx.keys():
-                results.append((np.zeros(self.glove_dim), np.zeros(self.glove_dim)))
+                results.append((None, None))
                 print(word1, 'or', word2, 'not in corpus. Skipping...')
                 continue
             print('=' * 89)

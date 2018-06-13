@@ -1,0 +1,7 @@
+sklearn
+numpy
+scipy
+torch
+torchtext
+six
+nltk

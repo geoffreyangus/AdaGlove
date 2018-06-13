@@ -57,5 +57,16 @@ class TextReader(object):
         new_text = re.sub(self.regex_rules, '', sentence)
         return new_text.split(' ')
 
+    def sentences_count(self):
+        count = 0
+        for sentence in self.get_next_sentence():
+            count += 1
+
+        self.reset()
+        return count
+
+    def reset(self):
+        self.file.seek(0)
+
     def __del__(self):
         self.file.close()

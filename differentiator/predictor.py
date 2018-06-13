@@ -6,9 +6,9 @@ import data
 class Predictor(object):
 
     def __init__(
-        self, 
+        self,
         corpus,
-        data_path='../data/wikitext-2', 
+        data_path='../data/wikitext-2',
         checkpoint='../checkpoints/model.pt',
         temperature=1.0,
         seed=224):
@@ -20,12 +20,12 @@ class Predictor(object):
 
         # Set the random seed manually for reproducibility.
         torch.manual_seed(seed)
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        device_str = "cuda" if torch.cuda.is_available() else "cpu"
 
         self.data_path = data_path
         self.corpus = corpus
         with open(checkpoint, 'rb') as f:
-            self.model = torch.load(f).to(device)
+            self.model = torch.load(f, map_location=device_str)
         self.model.eval()
 
     def predict_candidates(self, inputs, num_candidates):
@@ -37,7 +37,7 @@ class Predictor(object):
             num_candidates  The number of top outcomes desired as output.
 
         Returns:
-            A list of tuples where each tuple contains 
+            A list of tuples where each tuple contains
                 1.) the rank of the word (1 indexed)
                 2.) the word itself
                 3.) unnormalized score from language model

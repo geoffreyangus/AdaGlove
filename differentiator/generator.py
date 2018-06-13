@@ -10,7 +10,7 @@ import multiprocessing
 import argparse
 import re
 
-STOP_WORDS = [',', '.', '*', '\\', '(', ')', '|', '<unk>', '[', ']']
+STOP_WORDS = [',', '.', '*', '\\', '(', ')', '|', '<unk>', '[', ']', '?', '+', '-']
 
 parser = argparse.ArgumentParser(description='CS224U Final Project.')
 parser.add_argument('--in_dir', required=True, help='the dataset from which to pull text')
@@ -33,7 +33,7 @@ class GloVeGenerator(object):
         self.glove_dim = glove_dim
         self.centroid_dict = defaultdict(list)
         print('Initializing language model...')
-        self.predictor = Predictor(self.corpus)
+        self.predictor = Predictor(self.corpus, checkpoint='../checkpoints/model_87.pt')
 
         target_path = dirname(realpath(__file__))
         # Find parent directory agnostic of current location
@@ -42,7 +42,7 @@ class GloVeGenerator(object):
 
     def read_glove(self, vector_file):
         glove_dict = {}
-        with open(join(self.glove_path, vector_file), 'r') as f:
+        with open(join(self.glove_path, vector_file + '.txt'), 'r') as f:
             line = f.readline()
             while line:
                 line_list = line.split(' ')
@@ -97,7 +97,7 @@ class GloVeGenerator(object):
     def fit(self, in_file, out_file):
         print('Fitting to {}...'.format(join(self.data_path, in_file)))
         print('Initializing GloVe vectors...')
-        self.glove_dict = self.init_glove(in_file, 'vectors.txt')
+        self.glove_dict = self.init_glove(in_file, 'vectors')
         reader = TextReader(join(self.data_path, in_file), regex_rules=r"(= +.*= +)")
 
         num_iters = 0
@@ -138,12 +138,8 @@ class GloVeGenerator(object):
 
         candidates = self.predictor.predict_candidates(context, 10)
         candidate_pattern = self.generate_regex_pattern([candidate[1] for candidate in candidates])
-        print(candidates)
-        print(candidate_pattern)
         # TODO: retrain language model on the new dataset. For now we are averaging all centroids.
         candidates = np.array([vec for key, vec in glove_dict.items() if re.search(candidate_pattern, key)])
-        print(candidates.shape)
-        print(candidates)
         candidate_centroid = np.average(candidates, axis=0)
 
         homonyms = np.array([vec for key, vec in glove_dict.items() if re.search(homonym_pattern, key)])
@@ -162,6 +158,7 @@ class GloVeGenerator(object):
                 results.append((np.zeros(self.glove_dim), np.zeros(self.glove_dim)))
                 print(word1, 'or', word2, 'not in corpus. Skipping...')
                 continue
+            print('=' * 89)
             result1 = self.find_nearest_semantic_neighbor(word1, context1)
             result2 = self.find_nearest_semantic_neighbor(word2, context2)
             results.append((result1, result2))

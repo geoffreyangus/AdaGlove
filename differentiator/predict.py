@@ -22,7 +22,7 @@ y = [int(float(ex.avg_rating) > 5) for ex in harness.dataset]
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.80, random_state=42)
 
 model = GloVeGenerator()
-model.set_glove_file('new_vectors.txt')
+model.set_glove_file('new_vectors')
 
 # Get homonym embeddings of X_train & X_test
 X_train = model.predict(X_train)
